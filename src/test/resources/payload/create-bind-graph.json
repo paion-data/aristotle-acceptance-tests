@@ -1,0 +1,7 @@
+{
+  "graphCreateDTO": {
+    "description": "%s",
+    "title": "%s",
+    "userUidcid": "%s"
+  }
+}
