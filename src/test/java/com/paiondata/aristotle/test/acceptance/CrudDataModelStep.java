@@ -15,9 +15,64 @@
  */
 package com.paiondata.aristotle.test.acceptance;
 
+import org.junit.Assert;
+
+import io.cucumber.java.Before;
+import io.cucumber.java.en.Given;
+import io.restassured.RestAssured;
+import io.restassured.http.ContentType;
+import io.restassured.response.Response;
+
+import java.util.Collections;
+
 /**
  * Steps for CRUD operations on the Doctor data model.
  */
 public class CrudDataModelStep extends AbstractStepDefinitions {
 
+    private static boolean isDatabaseCleaningEnabled = true;
+    private String uidcid;
+    private String nickName;
+
+    /**
+     * Check if the database is empty.
+     */
+    @Before
+    public void checkDatabase() {
+        if (!isDatabaseCleaningEnabled) {
+            return;
+        }
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(USER_ENDPOINT);
+        response.then()
+                .statusCode(OK_CODE);
+
+        Assert.assertEquals(Collections.emptyList(), response.jsonPath().get("data"));
+    }
+
+    @Given("there exists a User entity with nickName {string} and uidcid {string}")
+    public void createUserWithNickNameAndUidcid(String arg0, String arg1) {
+
+    }
+
+    /**
+     * creates a User entity.
+     * @param uidcid uidcid.
+     * @param nickName nickName.
+     * @return Response.
+     */
+    protected Response createUser(final String uidcid, final String nickName) {
+        return RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(String.format(payload("create-doctor-once.json"),
+                        uidcid, nickName))
+                .when()
+                .post(USER_ENDPOINT);
+    }
 }
