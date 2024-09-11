@@ -99,7 +99,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .statusCode(OK_CODE);
     }
 
-    @Given("there exists a User entity with nickName {string} and uidcid {string}")
+    @Given("create a User entity with nickName {string} and uidcid {string}")
     public void createUserWithNickNameAndUidcid(String nickName, String uidcid) {
         Response response = createUser(nickName, uidcid);
         this.uidcid = uidcid;
@@ -230,5 +230,39 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .put(GRAPH_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
+    }
+
+    @Then("we can count the number {string} of users and retrieve the information and reset the database cleanup {string}")
+    public void weCanCountTheNumberOfUsersAndRetrieveTheInformationAndResetTheDatabaseCleanup(final String count, final String inputCleanup) {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(USER_ENDPOINT);
+        response.then()
+                .statusCode(OK_CODE);
+
+        List<String> data = response.jsonPath().get("data");
+        Assert.assertEquals(Integer.parseInt(count), data.size());
+
+        isDatabaseCleaningEnabled = Boolean.parseBoolean(inputCleanup);
+    }
+
+    @Then("we can count the number {string} of graphs and retrieve the information and reset the database cleanup {string}")
+    public void weCanCountTheNumberOfGraphsAndRetrieveTheInformationAndResetTheDatabaseCleanup(final String count, final String inputCleanup) {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        List<String> graphs = response.jsonPath().get("data.graphs");
+        Assert.assertEquals(Integer.parseInt(count), graphs.size());
+
+        isDatabaseCleaningEnabled = Boolean.parseBoolean(inputCleanup);
     }
 }
