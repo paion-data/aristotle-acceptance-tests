@@ -17,6 +17,7 @@ package com.paiondata.aristotle.test.acceptance;
 
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
+import io.cucumber.java.en.And;
 import io.cucumber.java.en.Then;
 import io.cucumber.java.en.When;
 import org.junit.Assert;
@@ -30,7 +31,6 @@ import io.restassured.response.Response;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * Steps for CRUD operations on the Doctor data model.
@@ -40,6 +40,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
     private static boolean isDatabaseCleaningEnabled = true;
     private String uidcid;
     private String nickName;
+    private String graphUuid;
 
     /**
      * Check if the database is empty.
@@ -134,7 +135,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(String.format(payload("create-doctor-once.json"),
+                .body(String.format(payload("create-update-user.json"),
                         uidcid, nickName))
                 .when()
                 .post(USER_ENDPOINT);
@@ -156,7 +157,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .given()
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
-                    .body(String.format(payload("create-doctor-once.json"),
+                    .body(String.format(payload("create-update-user.json"),
                             inputUidcid, inputNickName))
                     .when()
                     .put(USER_ENDPOINT);
@@ -175,7 +176,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
      * @param description the description.
      */
     @When("when we create the graph with {string} and {string}")
-    public void weCreateTheGraph(final String title, final String description) {
+    public void createGraph(final String title, final String description) {
         final Response response = RestAssured
                 .given()
                 .contentType(ContentType.JSON)
@@ -195,10 +196,39 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(GRAPH_ENDPOINT + "/" + title);
+                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
-        Assert.assertEquals(title, response.jsonPath().get("data.title"));
+        List<String> graphUuids = response.jsonPath().get("data.uuid");
+        this.graphUuid = graphUuids.get(0);
+
+        List<String> titles = response.jsonPath().get("data.title");
+        Assert.assertEquals(title, titles.get(0));
+        List<String> descriptions = response.jsonPath().get("data.description");
+        Assert.assertEquals(description, descriptions.get(0));
+    }
+
+    @Given("we create a User with {string} and {string} and add a graph with {string} and {string}")
+    public void weCreateAUserWithAndAndAddAGraphWithAnd(String nickName, String uidcid, String title, String description) {
+        createUser(nickName, uidcid);
+        this.uidcid = uidcid;
+        this.nickName = nickName;
+
+        createGraph(title, description);
+    }
+
+    @And("we update the graph with {string} and {string}")
+    public void weUpdateTheGraphWithAnd(String newTitle, String newDescription) {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(String.format(payload("update-graph.json"),
+                        this.graphUuid, newTitle, newDescription))
+                .when()
+                .put(GRAPH_ENDPOINT);
+        response.then()
+                .statusCode(OK_CODE);
     }
 }

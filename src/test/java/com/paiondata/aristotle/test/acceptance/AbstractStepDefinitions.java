@@ -34,6 +34,7 @@ abstract class AbstractStepDefinitions {
     protected static final String USER_UIDCID_PATH = "data.uidcid";
     protected static final String USER_NICK_NAME_PATH = "data.nickName";
     protected static final String USER_ENDPOINT = "/user";
+    protected static final String USER_GRAPH_ENDPOINT = "/user/graph";
     protected static final String GRAPH_ENDPOINT = "/graph";
     protected static final String NODE_ENDPOINT = "/node";
     protected static final String NODE_GRAPH_ENDPOINT = "/node/graph";
