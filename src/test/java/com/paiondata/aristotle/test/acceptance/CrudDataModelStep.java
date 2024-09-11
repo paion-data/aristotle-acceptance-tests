@@ -29,6 +29,7 @@ import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,10 @@ import java.util.Map;
  */
 public class CrudDataModelStep extends AbstractStepDefinitions {
 
+    private static final String DESCRIPTION = "description";
+    private static final String TITLE = "title";
+    private static final String START_NODE = "startNode";
+    private static final String END_NODE = "endNode";
     private static boolean isDatabaseCleaningEnabled = true;
     private String uidcid;
     private String nickName;
@@ -264,5 +269,91 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
         Assert.assertEquals(Integer.parseInt(count), graphs.size());
 
         isDatabaseCleaningEnabled = Boolean.parseBoolean(inputCleanup);
+    }
+
+    @When("when we create the graph with {string} and add nodes with {string} and bindings with {string}")
+    public void whenWeCreateTheGraphWithAndAddNodesWithAndBindingsWith(String graphInfo, String nodeInfo, String relationInfo) {
+        if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
+            Map<String, String> graphMap = getMap(graphInfo);
+            Map<String, String> nodeMap = getMap(nodeInfo);
+            Map<String, String> relationMap = getMap(relationInfo);
+            final Response response = RestAssured
+                    .given()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body(String.format(payload("create-bind-graph-node.json"),
+                            graphMap.get(DESCRIPTION), graphMap.get(TITLE), this.uidcid,
+                            nodeMap.get("title1"), nodeMap.get("ID1"), nodeMap.get("title2"), nodeMap.get("ID2"),
+                            nodeMap.get("title3"), nodeMap.get("ID3"), nodeMap.get("title4"), nodeMap.get("ID4"),
+                            relationMap.get("fromId1"), relationMap.get("relation1"), relationMap.get("toId1"),
+                            relationMap.get("fromId2"), relationMap.get("relation2"), relationMap.get("toId2"),
+                            relationMap.get("fromId3"), relationMap.get("relation3"), relationMap.get("toId3"),
+                            relationMap.get("fromId4"), relationMap.get("relation4"), relationMap.get("toId4"),
+                            relationMap.get("fromId5"), relationMap.get("relation5"), relationMap.get("toId5"),
+                            relationMap.get("fromId6"), relationMap.get("relation6"), relationMap.get("toId6")))
+                    .when()
+                    .post(NODE_GRAPH_ENDPOINT);
+            response.then()
+                    .statusCode(OK_CODE);
+        }
+    }
+
+    @And("we can query the graph with User uidcid")
+    public void weCanQueryTheGraphWithUserUidcid() {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        List<String> graphUuids = response.jsonPath().get("data.uuid");
+        this.graphUuid = graphUuids.get(0);
+    }
+
+
+    @Then("we can query the graph and nodes and retrieve the information with {string},{string} and {string}")
+    public void weCanQueryTheGraphAndNodesAndRetrieveTheInformationWithAnd(String graphInfo, String nodeInfo, String relationInfo) {
+        if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
+            Map<String, String> graphMap = getMap(graphInfo);
+            Map<String, String> nodeMap = getMap(nodeInfo);
+            Map<String, String> relationMap = getMap(relationInfo);
+
+            final Response response = RestAssured
+                    .given()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .when()
+                    .get(GRAPH_ENDPOINT + "/" + this.graphUuid);
+            response.then()
+                    .statusCode(OK_CODE);
+
+            System.out.println(response.asString());
+
+            Assert.assertEquals(graphMap.get(TITLE), response.jsonPath().get("data.title"));
+            Assert.assertEquals(graphMap.get(DESCRIPTION), response.jsonPath().get("data.description"));
+            Assert.assertEquals(nodeMap.get("title3"), response.jsonPath().get("data.nodes[0].startNode.title"));
+            Assert.assertEquals(nodeMap.get("title4"), response.jsonPath().get("data.nodes[0].endNode.title"));
+            Assert.assertEquals(relationMap.get("relation4"), response.jsonPath().get("data.nodes[0].relation.name"));
+        }
+    }
+
+    /**
+     * get the map.
+     * @param info the info.
+     * @return Map.
+     */
+    private static Map<String, String> getMap(final String info) {
+        final Map<String, String> map = new HashMap<>();
+
+        final String[] pairs = info.split(", ");
+        for (final String pair : pairs) {
+            final String[] keyValue = pair.split(": ");
+            map.put(keyValue[0], keyValue[1]);
+        }
+
+        return map;
     }
 }
