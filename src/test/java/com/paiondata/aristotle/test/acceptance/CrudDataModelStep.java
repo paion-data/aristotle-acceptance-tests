@@ -15,6 +15,8 @@
  */
 package com.paiondata.aristotle.test.acceptance;
 
+import com.paiondata.aristotle.test.common.base.Constants;
+
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
@@ -38,14 +40,12 @@ import java.util.Map;
  */
 public class CrudDataModelStep extends AbstractStepDefinitions {
 
-    private static final String DESCRIPTION = "description";
-    private static final String TITLE = "title";
-    private static final String START_NODE = "startNode";
-    private static final String END_NODE = "endNode";
     private static boolean isDatabaseCleaningEnabled = true;
     private String uidcid;
     private String nickName;
     private String graphUuid;
+    private String relationUuid1;
+    private String relationUuid2;
 
     /**
      * Check if the database is empty.
@@ -60,7 +60,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_ENDPOINT);
+                .get(Constants.USER_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
 
@@ -80,11 +80,11 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_ENDPOINT);
+                .get(Constants.USER_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
 
-        final List<?> ids = response.jsonPath().get(USER_UIDCID_PATH);
+        final List<?> ids = response.jsonPath().get(Constants.USER_UIDCID_PATH);
         aCreatedDoctorEntityIsDeleted(ids);
     }
 
@@ -99,12 +99,12 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .accept(ContentType.JSON)
                 .body(ids)
                 .when()
-                .delete(USER_ENDPOINT);
+                .delete(Constants.USER_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
     }
 
-    @Given("create a User entity with nickName {string} and uidcid {string}")
+    @Given("create a User entity with {string} and {string}")
     public void createUserWithNickNameAndUidcid(String nickName, String uidcid) {
         Response response = createUser(nickName, uidcid);
         this.uidcid = uidcid;
@@ -121,12 +121,12 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_ENDPOINT + "/" + this.uidcid);
+                .get(Constants.USER_ENDPOINT + "/" + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
-        Assert.assertEquals(this.uidcid, response.jsonPath().get(USER_UIDCID_PATH));
-        Assert.assertEquals(this.nickName, response.jsonPath().get(USER_NICK_NAME_PATH));
+        Assert.assertEquals(this.uidcid, response.jsonPath().get(Constants.USER_UIDCID_PATH));
+        Assert.assertEquals(this.nickName, response.jsonPath().get(Constants.USER_NICK_NAME_PATH));
     }
 
     /**
@@ -143,7 +143,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .body(String.format(payload("create-update-user.json"),
                         uidcid, nickName))
                 .when()
-                .post(USER_ENDPOINT);
+                .post(Constants.USER_ENDPOINT);
     }
 
     /**
@@ -165,7 +165,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .body(String.format(payload("create-update-user.json"),
                             inputUidcid, inputNickName))
                     .when()
-                    .put(USER_ENDPOINT);
+                    .put(Constants.USER_ENDPOINT);
 
             this.uidcid = inputUidcid;
             this.nickName = inputNickName;
@@ -180,7 +180,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
      * @param title the title.
      * @param description the description.
      */
-    @When("when we create the graph with {string} and {string}")
+    @When("we create the graph with {string} and {string}")
     public void createGraph(final String title, final String description) {
         final Response response = RestAssured
                 .given()
@@ -189,7 +189,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .body(String.format(payload("create-bind-graph.json"),
                         description, title, this.uidcid))
                 .when()
-                .post(NODE_GRAPH_ENDPOINT);
+                .post(Constants.NODE_GRAPH_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
     }
@@ -201,7 +201,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + "/" + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
@@ -232,7 +232,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .body(String.format(payload("update-graph.json"),
                         this.graphUuid, newTitle, newDescription))
                 .when()
-                .put(GRAPH_ENDPOINT);
+                .put(Constants.GRAPH_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
     }
@@ -244,7 +244,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_ENDPOINT);
+                .get(Constants.USER_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
 
@@ -261,7 +261,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + "/" + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
@@ -271,8 +271,9 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
         isDatabaseCleaningEnabled = Boolean.parseBoolean(inputCleanup);
     }
 
-    @When("when we create the graph with {string} and add nodes with {string} and bindings with {string}")
-    public void whenWeCreateTheGraphWithAndAddNodesWithAndBindingsWith(String graphInfo, String nodeInfo, String relationInfo) {
+    @When("we create the graph with {string} and add nodes with {string} and bindings with {string}")
+    public void whenWeCreateTheGraphWithAndAddNodesWithAndBindingsWith(String graphInfo, String nodeInfo,
+                                                                       String relationInfo) {
         if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
             Map<String, String> graphMap = getMap(graphInfo);
             Map<String, String> nodeMap = getMap(nodeInfo);
@@ -282,7 +283,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .body(String.format(payload("create-bind-graph-node.json"),
-                            graphMap.get(DESCRIPTION), graphMap.get(TITLE), this.uidcid,
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid,
                             nodeMap.get("title1"), nodeMap.get("ID1"), nodeMap.get("title2"), nodeMap.get("ID2"),
                             nodeMap.get("title3"), nodeMap.get("ID3"), nodeMap.get("title4"), nodeMap.get("ID4"),
                             relationMap.get("fromId1"), relationMap.get("relation1"), relationMap.get("toId1"),
@@ -292,7 +293,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                             relationMap.get("fromId5"), relationMap.get("relation5"), relationMap.get("toId5"),
                             relationMap.get("fromId6"), relationMap.get("relation6"), relationMap.get("toId6")))
                     .when()
-                    .post(NODE_GRAPH_ENDPOINT);
+                    .post(Constants.NODE_GRAPH_ENDPOINT);
             response.then()
                     .statusCode(OK_CODE);
         }
@@ -305,7 +306,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + "/" + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
@@ -315,7 +316,8 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
 
 
     @Then("we can query the graph and nodes and retrieve the information with {string},{string} and {string}")
-    public void weCanQueryTheGraphAndNodesAndRetrieveTheInformationWithAnd(String graphInfo, String nodeInfo, String relationInfo) {
+    public void weCanQueryTheGraphAndNodesAndRetrieveTheInformationWithAnd(String graphInfo, String nodeInfo,
+                                                                           String relationInfo) {
         if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
             Map<String, String> graphMap = getMap(graphInfo);
             Map<String, String> nodeMap = getMap(nodeInfo);
@@ -326,17 +328,60 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .when()
-                    .get(GRAPH_ENDPOINT + "/" + this.graphUuid);
+                    .get(Constants.GRAPH_ENDPOINT + "/" + this.graphUuid);
             response.then()
                     .statusCode(OK_CODE);
 
-            System.out.println(response.asString());
-
-            Assert.assertEquals(graphMap.get(TITLE), response.jsonPath().get("data.title"));
-            Assert.assertEquals(graphMap.get(DESCRIPTION), response.jsonPath().get("data.description"));
+            Assert.assertEquals(graphMap.get(Constants.TITLE), response.jsonPath().get("data.title"));
+            Assert.assertEquals(graphMap.get(Constants.DESCRIPTION), response.jsonPath().get("data.description"));
             Assert.assertEquals(nodeMap.get("title3"), response.jsonPath().get("data.nodes[0].startNode.title"));
             Assert.assertEquals(nodeMap.get("title4"), response.jsonPath().get("data.nodes[0].endNode.title"));
             Assert.assertEquals(relationMap.get("relation4"), response.jsonPath().get("data.nodes[0].relation.name"));
+        }
+    }
+
+    @Given("create a User entity with {string} and {string} and add a graph with {string}")
+    public void createAUserEntityWithAndAndAddAGraphWith(String nickName, String uidcid, String graphInfo) {
+        createUserWithNickNameAndUidcid(nickName, uidcid);
+
+        if (!graphInfo.isEmpty()) {
+            Map<String, String> graphMap = getMap(graphInfo);
+            final Response response = RestAssured
+                    .given()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body(String.format(payload("create-bind-graph.json"),
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid))
+                    .when()
+                    .post(Constants.NODE_GRAPH_ENDPOINT);
+            response.then()
+                    .statusCode(OK_CODE);
+        }
+    }
+
+    @When("we add nodes with {string} and bindings with {string}")
+    public void weAddNodesWithAndBindingsWith(String nodeInfo, String relationInfo) {
+        if (!nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
+            Map<String, String> nodeMap = getMap(nodeInfo);
+            Map<String, String> relationMap = getMap(relationInfo);
+            final Response response = RestAssured
+                    .given()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body(String.format(payload("create-bind-node.json"),
+                            this.graphUuid,
+                            nodeMap.get("title1"), nodeMap.get("ID1"), nodeMap.get("title2"), nodeMap.get("ID2"),
+                            nodeMap.get("title3"), nodeMap.get("ID3"), nodeMap.get("title4"), nodeMap.get("ID4"),
+                            relationMap.get("fromId1"), relationMap.get("relation1"), relationMap.get("toId1"),
+                            relationMap.get("fromId2"), relationMap.get("relation2"), relationMap.get("toId2"),
+                            relationMap.get("fromId3"), relationMap.get("relation3"), relationMap.get("toId3"),
+                            relationMap.get("fromId4"), relationMap.get("relation4"), relationMap.get("toId4"),
+                            relationMap.get("fromId5"), relationMap.get("relation5"), relationMap.get("toId5"),
+                            relationMap.get("fromId6"), relationMap.get("relation6"), relationMap.get("toId6")))
+                    .when()
+                    .post(Constants.NODE_ENDPOINT);
+            response.then()
+                    .statusCode(OK_CODE);
         }
     }
 
@@ -355,5 +400,47 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
         }
 
         return map;
+    }
+
+    @Given("create a User entity with nickName {string} and uidcid {string}, add a graph with info {string}, and add nodes with info {string} and bindings with info {string}")
+    public void createAUserEntityWithNickNameAndUidcidAddAGraphWithInfoAndAddNodesWithInfoAndBindingsWithInfo(String nickName, String uidcid, String graphInfo, String nodeInfo, String relationInfo) {
+        createUserWithNickNameAndUidcid(nickName, uidcid);
+
+        if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
+            Map<String, String> graphMap = getMap(graphInfo);
+            Map<String, String> nodeMap = getMap(nodeInfo);
+            Map<String, String> relationMap = getMap(relationInfo);
+            final Response response = RestAssured
+                    .given()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body(String.format(payload("create-bind-graph-node-1.json"),
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid,
+                            nodeMap.get("title1"), nodeMap.get("ID1"), nodeMap.get("title2"), nodeMap.get("ID2"),
+                            relationMap.get("fromId1"), relationMap.get("relation1"), relationMap.get("toId1"),
+                            relationMap.get("fromId2"), relationMap.get("relation2"), relationMap.get("toId2")))
+                    .when()
+                    .post(Constants.NODE_GRAPH_ENDPOINT);
+            response.then()
+                    .statusCode(OK_CODE);
+        }
+    }
+
+    // TODO 获取relationUUID
+    @When("we can query the graph with User uidcid and get the relation uuid")
+    public void weCanQueryTheGraphWithUserUidcidAndGetTheRelationUuid() {
+        weCanQueryTheGraphWithUserUidcid();
+
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(Constants.GRAPH_ENDPOINT + "/" + this.graphUuid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        List<String> graphUuids = response.jsonPath().get("data.uuid");
+        this.graphUuid = graphUuids.get(0);
     }
 }
