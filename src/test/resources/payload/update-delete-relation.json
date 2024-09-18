@@ -1,0 +1,9 @@
+{
+  "graphUuid": "%s",
+  "updateMap": {
+    "%s": "%s"
+  },
+  "deleteList": [
+    "%s"
+  ]
+}

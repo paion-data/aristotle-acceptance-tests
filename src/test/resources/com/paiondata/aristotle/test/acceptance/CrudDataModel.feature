@@ -33,7 +33,7 @@ Feature: Aristotle Data Entity CRUD Operations
 
   Scenario Outline: API supports creating multiple users
     Given create a User entity with "<nickName>" and "<uidcid>"
-    Then we can count the number "<number>" of users and retrieve the information and reset the database cleanup "<cleanup>"
+    Then we can count the number "<number>" of users and retrieve the information and reset the database "<cleanup>"
 
     Examples:
       | nickName | uidcid | number | cleanup |
@@ -46,7 +46,7 @@ Feature: Aristotle Data Entity CRUD Operations
   Scenario Outline: API supports creating User with multiple graphs
     Given create a User entity with "vsr90" and "maklov"
     When we create the graph with "<title>" and "<description>"
-    Then we can count the number "<number>" of graphs and retrieve the information and reset the database cleanup "<cleanup>"
+    Then we can count the number "<number>" of graphs and retrieve the information and reset the database "<cleanup>"
 
     Examples:
       | title | description | number | cleanup |
@@ -78,7 +78,7 @@ Feature: Aristotle Data Entity CRUD Operations
 
   Scenario Outline: API supports just updating nodes'relation in one request
     Given create a User entity with nickName "<nickName>" and uidcid "<uidcid>", add a graph with info "<graphInfo>", and add nodes with info "<nodeInfo>" and bindings with info "<relationInfo>"
-    When we can query the graph with User uidcid and get the relation uuid
+    When we can query the graph
     And we update the relation with "<newRelationInfo>"
     Then we can query the new relation and retrieve the information with "<newRelationInfo>"
 
@@ -88,7 +88,7 @@ Feature: Aristotle Data Entity CRUD Operations
 
   Scenario Outline: API supports just deleting nodes'relation in one request
     Given create a User entity with nickName "<nickName>" and uidcid "<uidcid>", add a graph with info "<graphInfo>", and add nodes with info "<nodeInfo>" and bindings with info "<relationInfo>"
-    When we can query the graph with User uidcid and get the relation uuid
+    When we can query the graph
     And we delete the relation
     Then we can no longer query the relation
 
@@ -98,10 +98,30 @@ Feature: Aristotle Data Entity CRUD Operations
 
   Scenario Outline: API supports updating and deleting nodes'relation in one request
     Given create a User entity with nickName "<nickName>" and uidcid "<uidcid>", add a graph with info "<graphInfo>", and add nodes with info "<nodeInfo>" and bindings with info "<relationInfo>"
-    When we can query the graph with User uidcid and get the relation uuid
+    When we can query the graph
     And we update the relation with "<newRelationInfo>" and delete the another relation
     Then we can query the new relation and retrieve the information with "<newRelationInfo>" and no longer query the deleted relation
 
     Examples:
-      | uidcid |nickName | graphInfo                                         | nodeInfo                                      | relationInfo |
+      | uidcid |nickName | graphInfo                                         | nodeInfo                                      | relationInfo                                                                          |
+      | vsr98  |Ander    | title: NBA, description: A basketball competition | title1: Durant, ID1: 1, title2: Curry, ID2: 2 | fromId1: 1, toId1: 2, relation1: team mate, fromId2: 2, toId2: 1, relation2: team mate|
+
+  Scenario Outline: API supports deleting nodes
+    Given create a User entity with nickName "<nickName>" and uidcid "<uidcid>", add a graph with info "<graphInfo>", and add nodes with info "<nodeInfo>" and bindings with info "<relationInfo>"
+    When we can query the graph
+    And we delete all nodes
+    Then we can no longer query the nodes
+
+    Examples:
+      | uidcid |nickName | graphInfo                                         | nodeInfo                                      | relationInfo                                                                          |
+      | vsr98  |Ander    | title: NBA, description: A basketball competition | title1: Durant, ID1: 1, title2: Curry, ID2: 2 | fromId1: 1, toId1: 2, relation1: team mate, fromId2: 2, toId2: 1, relation2: team mate|
+
+  Scenario Outline: API supports deleting graph
+    Given create a User entity with nickName "<nickName>" and uidcid "<uidcid>", add a graph with info "<graphInfo>", and add nodes with info "<nodeInfo>" and bindings with info "<relationInfo>"
+    When we can query the graph
+    And we delete the graph
+    Then we can no longer query the graph
+
+    Examples:
+      | uidcid |nickName | graphInfo                                         | nodeInfo                                      | relationInfo                                                                          |
       | vsr98  |Ander    | title: NBA, description: A basketball competition | title1: Durant, ID1: 1, title2: Curry, ID2: 2 | fromId1: 1, toId1: 2, relation1: team mate, fromId2: 2, toId2: 1, relation2: team mate|
