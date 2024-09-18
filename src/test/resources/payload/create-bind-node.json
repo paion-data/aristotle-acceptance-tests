@@ -1,9 +1,5 @@
 {
-  "graphCreateDTO": {
-    "description": "%s",
-    "title": "%s",
-    "userUidcid": "%s"
-  },
+  "graphUuid": "%s",
   "graphNodeDTO": [
     {
       "description": "-",

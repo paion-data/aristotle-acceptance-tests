@@ -15,6 +15,8 @@
  */
 package com.paiondata.aristotle.test.acceptance;
 
+import com.paiondata.aristotle.test.common.base.Constants;
+
 import io.cucumber.datatable.DataTable;
 import io.cucumber.java.After;
 import io.cucumber.java.en.And;
@@ -28,6 +30,7 @@ import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -38,14 +41,14 @@ import java.util.Map;
  */
 public class CrudDataModelStep extends AbstractStepDefinitions {
 
-    private static final String DESCRIPTION = "description";
-    private static final String TITLE = "title";
-    private static final String START_NODE = "startNode";
-    private static final String END_NODE = "endNode";
     private static boolean isDatabaseCleaningEnabled = true;
     private String uidcid;
     private String nickName;
     private String graphUuid;
+    private String relationUuid1;
+    private String relationUuid2;
+    private String nodeUuid1;
+    private String nodeUuid2;
 
     /**
      * Check if the database is empty.
@@ -60,11 +63,11 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_ENDPOINT);
+                .get(Constants.USER_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
 
-        Assert.assertEquals(Collections.emptyList(), response.jsonPath().get("data"));
+        Assert.assertEquals(Collections.emptyList(), response.jsonPath().get(Constants.DATA));
     }
 
     /**
@@ -80,11 +83,11 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_ENDPOINT);
+                .get(Constants.USER_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
 
-        final List<?> ids = response.jsonPath().get(USER_UIDCID_PATH);
+        final List<?> ids = response.jsonPath().get(Constants.USER_UIDCID_PATH);
         aCreatedDoctorEntityIsDeleted(ids);
     }
 
@@ -99,14 +102,19 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .accept(ContentType.JSON)
                 .body(ids)
                 .when()
-                .delete(USER_ENDPOINT);
+                .delete(Constants.USER_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
     }
 
-    @Given("create a User entity with nickName {string} and uidcid {string}")
-    public void createUserWithNickNameAndUidcid(String nickName, String uidcid) {
-        Response response = createUser(nickName, uidcid);
+    /**
+     * Create a User entity.
+     * @param nickName nickName.
+     * @param uidcid uidcid.
+     */
+    @Given("create a User entity with {string} and {string}")
+    public void createUserWithNickNameAndUidcid(final String nickName, final String uidcid) {
+        final Response response = createUser(nickName, uidcid);
         this.uidcid = uidcid;
         this.nickName = nickName;
     }
@@ -121,18 +129,19 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_ENDPOINT + "/" + this.uidcid);
+                .get(Constants.USER_ENDPOINT + Constants.SLASH + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
-        Assert.assertEquals(this.uidcid, response.jsonPath().get(USER_UIDCID_PATH));
-        Assert.assertEquals(this.nickName, response.jsonPath().get(USER_NICK_NAME_PATH));
+        Assert.assertEquals(this.uidcid, response.jsonPath().get(Constants.USER_UIDCID_PATH));
+        Assert.assertEquals(this.nickName, response.jsonPath().get(Constants.USER_NICK_NAME_PATH));
     }
 
     /**
      * creates a User entity.
      * @param nickName nickName.
      * @param uidcid uidcid.
+     *
      * @return Response.
      */
     protected Response createUser(final String nickName, final String uidcid) {
@@ -140,10 +149,10 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(String.format(payload("create-update-user.json"),
+                .body(String.format(payload(Constants.CREATE_UPDATE_USER_JSON),
                         uidcid, nickName))
                 .when()
-                .post(USER_ENDPOINT);
+                .post(Constants.USER_ENDPOINT);
     }
 
     /**
@@ -162,10 +171,10 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .given()
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
-                    .body(String.format(payload("create-update-user.json"),
+                    .body(String.format(payload(Constants.CREATE_UPDATE_USER_JSON),
                             inputUidcid, inputNickName))
                     .when()
-                    .put(USER_ENDPOINT);
+                    .put(Constants.USER_ENDPOINT);
 
             this.uidcid = inputUidcid;
             this.nickName = inputNickName;
@@ -180,20 +189,25 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
      * @param title the title.
      * @param description the description.
      */
-    @When("when we create the graph with {string} and {string}")
+    @When("we create the graph with {string} and {string}")
     public void createGraph(final String title, final String description) {
         final Response response = RestAssured
                 .given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
-                .body(String.format(payload("create-bind-graph.json"),
+                .body(String.format(payload(Constants.CREATE_BIND_GRAPH_JSON),
                         description, title, this.uidcid))
                 .when()
-                .post(NODE_GRAPH_ENDPOINT);
+                .post(Constants.NODE_GRAPH_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
     }
 
+    /**
+     * we can query the graph and retrieve the information.
+     * @param title the title.
+     * @param description the description.
+     */
     @Then("we can query the graph and retrieve the information with {string} and {string}")
     public void weCanQueryTheGraphAndRetrieveTheInformation(final String title, final String description) {
         final Response response = RestAssured
@@ -201,21 +215,29 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
-        List<String> graphUuids = response.jsonPath().get("data.uuid");
+        final List<String> graphUuids = response.jsonPath().get(Constants.UUID_PATH);
         this.graphUuid = graphUuids.get(0);
 
-        List<String> titles = response.jsonPath().get("data.title");
+        final List<String> titles = response.jsonPath().get(Constants.TITLE_PATH);
         Assert.assertEquals(title, titles.get(0));
-        List<String> descriptions = response.jsonPath().get("data.description");
+        final List<String> descriptions = response.jsonPath().get(Constants.DESCRIPTION_PATH);
         Assert.assertEquals(description, descriptions.get(0));
     }
 
+    /**
+     * create a User with {string} and {string} and add a graph with {string} and {string}").
+     * @param nickName the nickName
+     * @param uidcid the uidcid
+     * @param title the title
+     * @param description the description
+     */
     @Given("we create a User with {string} and {string} and add a graph with {string} and {string}")
-    public void weCreateAUserWithAndAndAddAGraphWithAnd(String nickName, String uidcid, String title, String description) {
+    public void weCreateAUserWithAndAndAddAGraphWithAnd(final String nickName, final String uidcid,
+                                                        final String title, final String description) {
         createUser(nickName, uidcid);
         this.uidcid = uidcid;
         this.nickName = nickName;
@@ -223,8 +245,13 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
         createGraph(title, description);
     }
 
+    /**
+     * we update the graph with {string} and {string}.
+     * @param newTitle the title
+     * @param newDescription the description
+     */
     @And("we update the graph with {string} and {string}")
-    public void weUpdateTheGraphWithAnd(String newTitle, String newDescription) {
+    public void weUpdateTheGraphWithAnd(final String newTitle, final String newDescription) {
         final Response response = RestAssured
                 .given()
                 .contentType(ContentType.JSON)
@@ -232,57 +259,74 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .body(String.format(payload("update-graph.json"),
                         this.graphUuid, newTitle, newDescription))
                 .when()
-                .put(GRAPH_ENDPOINT);
+                .put(Constants.GRAPH_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
     }
 
-    @Then("we can count the number {string} of users and retrieve the information and reset the database cleanup {string}")
-    public void weCanCountTheNumberOfUsersAndRetrieveTheInformationAndResetTheDatabaseCleanup(final String count, final String inputCleanup) {
+    /**
+     * we can count the number {string} of users and retrieve the information and reset the database {string}.
+     * @param count the count
+     * @param inputCleanup true or false
+     */
+    @Then("we can count the number {string} of users and retrieve the information and reset the database {string}")
+    public void countTheNumberOfUsersRetrieveTheInformation(final String count, final String inputCleanup) {
         final Response response = RestAssured
                 .given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_ENDPOINT);
+                .get(Constants.USER_ENDPOINT);
         response.then()
                 .statusCode(OK_CODE);
 
-        List<String> data = response.jsonPath().get("data");
+        final List<String> data = response.jsonPath().get(Constants.DATA);
         Assert.assertEquals(Integer.parseInt(count), data.size());
 
         isDatabaseCleaningEnabled = Boolean.parseBoolean(inputCleanup);
     }
 
-    @Then("we can count the number {string} of graphs and retrieve the information and reset the database cleanup {string}")
-    public void weCanCountTheNumberOfGraphsAndRetrieveTheInformationAndResetTheDatabaseCleanup(final String count, final String inputCleanup) {
+    /**
+     * we can count the number {string} of graphs and retrieve the information and reset the database {string}.
+     * @param count the count
+     * @param inputCleanup true or false
+     */
+    @Then("we can count the number {string} of graphs and retrieve the information and reset the database {string}")
+    public void countTheNumberOfGraphsRetrieveTheInformation(final String count, final String inputCleanup) {
         final Response response = RestAssured
                 .given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
-        List<String> graphs = response.jsonPath().get("data.graphs");
+        final List<String> graphs = response.jsonPath().get("data.graphs");
         Assert.assertEquals(Integer.parseInt(count), graphs.size());
 
         isDatabaseCleaningEnabled = Boolean.parseBoolean(inputCleanup);
     }
 
-    @When("when we create the graph with {string} and add nodes with {string} and bindings with {string}")
-    public void whenWeCreateTheGraphWithAndAddNodesWithAndBindingsWith(String graphInfo, String nodeInfo, String relationInfo) {
+    /**
+     * we create the graph with {string} and add nodes with {string} and bindings with {string}.
+     * @param graphInfo the graph info
+     * @param nodeInfo the node info
+     * @param relationInfo the relation info
+     */
+    @When("we create the graph with {string} and add nodes with {string} and bindings with {string}")
+    public void whenWeCreateTheGraphWithAndAddNodesWithAndBindingsWith(final String graphInfo, final String nodeInfo,
+                                                                       final String relationInfo) {
         if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
-            Map<String, String> graphMap = getMap(graphInfo);
-            Map<String, String> nodeMap = getMap(nodeInfo);
-            Map<String, String> relationMap = getMap(relationInfo);
+            final Map<String, String> graphMap = getMap(graphInfo);
+            final Map<String, String> nodeMap = getMap(nodeInfo);
+            final Map<String, String> relationMap = getMap(relationInfo);
             final Response response = RestAssured
                     .given()
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .body(String.format(payload("create-bind-graph-node.json"),
-                            graphMap.get(DESCRIPTION), graphMap.get(TITLE), this.uidcid,
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid,
                             nodeMap.get("title1"), nodeMap.get("ID1"), nodeMap.get("title2"), nodeMap.get("ID2"),
                             nodeMap.get("title3"), nodeMap.get("ID3"), nodeMap.get("title4"), nodeMap.get("ID4"),
                             relationMap.get("fromId1"), relationMap.get("relation1"), relationMap.get("toId1"),
@@ -292,12 +336,15 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                             relationMap.get("fromId5"), relationMap.get("relation5"), relationMap.get("toId5"),
                             relationMap.get("fromId6"), relationMap.get("relation6"), relationMap.get("toId6")))
                     .when()
-                    .post(NODE_GRAPH_ENDPOINT);
+                    .post(Constants.NODE_GRAPH_ENDPOINT);
             response.then()
                     .statusCode(OK_CODE);
         }
     }
 
+    /**
+     * we can query the graph with User uidcid.
+     */
     @And("we can query the graph with User uidcid")
     public void weCanQueryTheGraphWithUserUidcid() {
         final Response response = RestAssured
@@ -305,39 +352,357 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(USER_GRAPH_ENDPOINT + "/" + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + this.uidcid);
         response.then()
                 .statusCode(OK_CODE);
 
-        List<String> graphUuids = response.jsonPath().get("data.uuid");
+        final List<String> graphUuids = response.jsonPath().get(Constants.UUID_PATH);
         this.graphUuid = graphUuids.get(0);
     }
 
-
+    /**
+     * we can query the graph and nodes and retrieve the information with {string},{string} and {string}.
+     * @param graphInfo the graphInfo
+     * @param nodeInfo the nodeInfo
+     * @param relationInfo the relationInfo
+     */
     @Then("we can query the graph and nodes and retrieve the information with {string},{string} and {string}")
-    public void weCanQueryTheGraphAndNodesAndRetrieveTheInformationWithAnd(String graphInfo, String nodeInfo, String relationInfo) {
+    public void weCanQueryTheGraphAndNodesAndRetrieveTheInformationWithAnd(final String graphInfo,
+                                                                           final String nodeInfo,
+                                                                           final String relationInfo) {
         if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
-            Map<String, String> graphMap = getMap(graphInfo);
-            Map<String, String> nodeMap = getMap(nodeInfo);
-            Map<String, String> relationMap = getMap(relationInfo);
+            final Map<String, String> graphMap = getMap(graphInfo);
 
             final Response response = RestAssured
                     .given()
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .when()
-                    .get(GRAPH_ENDPOINT + "/" + this.graphUuid);
+                    .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
             response.then()
                     .statusCode(OK_CODE);
 
-            System.out.println(response.asString());
-
-            Assert.assertEquals(graphMap.get(TITLE), response.jsonPath().get("data.title"));
-            Assert.assertEquals(graphMap.get(DESCRIPTION), response.jsonPath().get("data.description"));
-            Assert.assertEquals(nodeMap.get("title3"), response.jsonPath().get("data.nodes[0].startNode.title"));
-            Assert.assertEquals(nodeMap.get("title4"), response.jsonPath().get("data.nodes[0].endNode.title"));
-            Assert.assertEquals(relationMap.get("relation4"), response.jsonPath().get("data.nodes[0].relation.name"));
+            Assert.assertEquals(graphMap.get(Constants.TITLE), response.jsonPath().get(Constants.TITLE_PATH));
+            Assert.assertEquals(graphMap.get(Constants.DESCRIPTION),
+                    response.jsonPath().get(Constants.DESCRIPTION_PATH));
         }
+    }
+
+    /**
+     * create a User entity with {string} and {string} and add a graph with {string}.
+     * @param nickName the nickname
+     * @param uidcid the uidcid
+     * @param graphInfo to add
+     */
+    @Given("create a User entity with {string} and {string} and add a graph with {string}")
+    public void createAUserEntityWithAndAndAddAGraphWith(final String nickName, final String uidcid,
+                                                         final String graphInfo) {
+        createUserWithNickNameAndUidcid(nickName, uidcid);
+
+        if (!graphInfo.isEmpty()) {
+            final Map<String, String> graphMap = getMap(graphInfo);
+            final Response response = RestAssured
+                    .given()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body(String.format(payload(Constants.CREATE_BIND_GRAPH_JSON),
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid))
+                    .when()
+                    .post(Constants.NODE_GRAPH_ENDPOINT);
+            response.then()
+                    .statusCode(OK_CODE);
+        }
+    }
+
+    /**
+     * we add nodes with {string} and bindings with {string}.
+     * @param nodeInfo to add
+     * @param relationInfo to add
+     */
+    @When("we add nodes with {string} and bindings with {string}")
+    public void weAddNodesWithAndBindingsWith(final String nodeInfo, final String relationInfo) {
+        if (!nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
+            final Map<String, String> nodeMap = getMap(nodeInfo);
+            final Map<String, String> relationMap = getMap(relationInfo);
+            final Response response = RestAssured
+                    .given()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body(String.format(payload("create-bind-node.json"),
+                            this.graphUuid,
+                            nodeMap.get(Constants.TITLE1), nodeMap.get(Constants.ID1),
+                            nodeMap.get(Constants.TITLE2), nodeMap.get(Constants.ID2),
+                            nodeMap.get(Constants.TITLE3), nodeMap.get(Constants.ID3),
+                            nodeMap.get(Constants.TITLE4), nodeMap.get(Constants.ID4),
+                            relationMap.get(Constants.FROM_ID1), relationMap.get(Constants.RELATION_1),
+                            relationMap.get(Constants.TO_ID1), relationMap.get(Constants.FROM_ID2),
+                            relationMap.get(Constants.RELATION_2), relationMap.get(Constants.TO_ID2),
+                            relationMap.get(Constants.FROM_ID3), relationMap.get(Constants.RELATION_3),
+                            relationMap.get(Constants.TO_ID3), relationMap.get(Constants.FROM_ID4),
+                            relationMap.get(Constants.RELATION_4), relationMap.get(Constants.TO_ID4),
+                            relationMap.get(Constants.FROM_ID5), relationMap.get(Constants.RELATION_5),
+                            relationMap.get(Constants.TO_ID5), relationMap.get(Constants.FROM_ID6),
+                            relationMap.get(Constants.RELATION_6), relationMap.get(Constants.TO_ID6)))
+                    .when()
+                    .post(Constants.NODE_ENDPOINT);
+            response.then()
+                    .statusCode(OK_CODE);
+        }
+    }
+
+    /**
+     * create a User entity with nickName {string} and uidcid {string}, add a graph with info {string}.
+     * @param nickName the nickname
+     * @param uidcid the uidcid
+     * @param graphInfo the graph info
+     * @param nodeInfo the node info
+     * @param relationInfo the relation info
+     */
+    @Given("create a User entity with nickName {string} and uidcid {string}, add a graph with info {string}," +
+            " and add nodes with info {string} and bindings with info {string}")
+    public void createUserAddAGraphAddNodesBindings(final String nickName, final String uidcid, final String graphInfo,
+                                                    final String nodeInfo, final String relationInfo) {
+        createUserWithNickNameAndUidcid(nickName, uidcid);
+
+        if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
+            final Map<String, String> graphMap = getMap(graphInfo);
+            final Map<String, String> nodeMap = getMap(nodeInfo);
+            final Map<String, String> relationMap = getMap(relationInfo);
+            final Response response = RestAssured
+                    .given()
+                    .contentType(ContentType.JSON)
+                    .accept(ContentType.JSON)
+                    .body(String.format(payload("create-bind-graph-node-1.json"),
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid,
+                            nodeMap.get(Constants.TITLE1), nodeMap.get(Constants.ID1), nodeMap.get(Constants.TITLE2),
+                            nodeMap.get(Constants.ID2), relationMap.get(Constants.FROM_ID1),
+                            relationMap.get(Constants.RELATION_1), relationMap.get(Constants.TO_ID1),
+                            relationMap.get(Constants.FROM_ID2), relationMap.get(Constants.RELATION_2),
+                            relationMap.get(Constants.TO_ID2)))
+                    .when()
+                    .post(Constants.NODE_GRAPH_ENDPOINT);
+            response.then()
+                    .statusCode(OK_CODE);
+        }
+    }
+
+    /**
+     * we can query the graph with user {string} and uidcid {string} and get the relation uuid.
+     */
+    @When("we can query the graph")
+    public void weCanQueryTheGraphWithUserUidcidAndGetTheRelationUuid() {
+        weCanQueryTheGraphWithUserUidcid();
+
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        final List<String> relationUuids = Arrays.asList(response.jsonPath().get("data.nodes[0].relation.uuid"),
+                response.jsonPath().get("data.nodes[1].relation.uuid"));
+        this.relationUuid1 = relationUuids.get(0);
+        this.relationUuid2 = relationUuids.get(1);
+
+        final List<String> nodeUuids = Arrays.asList(response.jsonPath().get("data.nodes[0].startNode.uuid"),
+                response.jsonPath().get("data.nodes[1].startNode.uuid"));
+        this.nodeUuid1 = nodeUuids.get(0);
+        this.nodeUuid2 = nodeUuids.get(1);
+    }
+
+    /**
+     * we update the relation with {string}.
+     * @param newRelationInfo the new relation info
+     */
+    @And("we update the relation with {string}")
+    public void weUpdateTheRelationWith(final String newRelationInfo) {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(String.format(payload("update-relation.json"),
+                        this.graphUuid, this.relationUuid1, newRelationInfo))
+                .when()
+                .put(Constants.NODE_RELATE_ENDPOINT);
+        response.then()
+                .statusCode(OK_CODE);
+    }
+
+    /**
+     * we can query the new relation and retrieve the information with {string}.
+     * @param newRelationInfo the new relation info
+     */
+    @Then("we can query the new relation and retrieve the information with {string}")
+    public void weCanQueryTheNewRelationAndRetrieveTheInformationWith(final String newRelationInfo) {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        final String relationName = response.jsonPath().get(Constants.RELATION_NAME_PATH);
+
+        Assert.assertEquals(newRelationInfo, relationName);
+    }
+
+    /**
+     * we delete the relation.
+     */
+    @And("we delete the relation")
+    public void weDeleteTheRelation() {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(String.format(payload("delete-relation.json"),
+                        this.graphUuid, this.relationUuid2))
+                .when()
+                .put(Constants.NODE_RELATE_ENDPOINT);
+        response.then()
+                .statusCode(OK_CODE);
+    }
+
+    /**
+     * we can no longer query the relation.
+     */
+    @Then("we can no longer query the relation")
+    public void weCanNoLongerQueryTheRelation() {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        final Object relation = response.jsonPath().get(Constants.RELATION_PATH);
+
+        Assert.assertNull(relation);
+    }
+
+    /**
+     * we update the relation with {string} and delete the another relation.
+     * @param newRelationInfo the new relation info
+     */
+    @And("we update the relation with {string} and delete the another relation")
+    public void weUpdateTheRelationWithAndDeleteTheAnotherRelation(final String newRelationInfo) {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(String.format(payload("update-delete-relation.json"),
+                        this.graphUuid, this.relationUuid1, newRelationInfo, this.relationUuid2))
+                .when()
+                .put(Constants.NODE_RELATE_ENDPOINT);
+        response.then()
+                .statusCode(OK_CODE);
+    }
+
+    /**
+     * we can query the new relation and retrieve the information with {string} and no longer query deleted relation.
+     * @param newRelationInfo the new relation info
+     */
+    @Then("we can query the new relation and retrieve the information " +
+            "with {string} and no longer query the deleted relation")
+    public void queryTheNewRelationAndRetrieveTheInformation(final String newRelationInfo) {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        final String relationName = response.jsonPath().get(Constants.RELATION_NAME_PATH);
+        final Object relation = response.jsonPath().get(Constants.RELATION_PATH);
+
+        Assert.assertEquals(newRelationInfo, relationName);
+        Assert.assertNull(relation);
+    }
+
+    /**
+     * we delete all nodes.
+     */
+    @And("we delete all nodes")
+    public void weDeleteAllNodes() {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(String.format(payload("delete-node.json"),
+                        this.nodeUuid1, this.nodeUuid2))
+                .when()
+                .delete(Constants.NODE_ENDPOINT);
+        response.then()
+                .statusCode(OK_CODE);
+    }
+
+    /**
+     * we can no longer query the nodes.
+     */
+    @Then("we can no longer query the nodes")
+    public void weCanNoLongerQueryTheNodes() {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        final List<Map<String, Object>> nodes = response.jsonPath().getList("data.nodes");
+
+        for (final Map<String, Object> node : nodes) {
+            final Object startNode = node.get("startNode");
+
+            Assert.assertTrue("StartNode should be an empty object",
+                    startNode instanceof Map && ((Map<?, ?>) startNode).isEmpty());
+        }
+    }
+
+    /**
+     * we delete the graph.
+     */
+    @And("we delete the graph")
+    public void weDeleteTheGraph() {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .body(String.format(payload("delete-graph.json"),
+                        this.graphUuid))
+                .when()
+                .delete(Constants.GRAPH_ENDPOINT);
+        response.then()
+                .statusCode(OK_CODE);
+    }
+
+    /**
+     * we can no longer query the graph.
+     */
+    @Then("we can no longer query the graph")
+    public void weCanNoLongerQueryTheGraph() {
+        final Response response = RestAssured
+                .given()
+                .contentType(ContentType.JSON)
+                .accept(ContentType.JSON)
+                .when()
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+        response.then()
+                .statusCode(OK_CODE);
+
+        final Object graph = response.jsonPath().get("data.nodes[0]");
+
+        Assert.assertNull(graph);
     }
 
     /**
