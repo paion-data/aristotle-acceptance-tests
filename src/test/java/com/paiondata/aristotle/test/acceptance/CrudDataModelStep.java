@@ -638,6 +638,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload("delete-node.json"),
+                        this.graphUuid,
                         this.nodeUuid1, this.nodeUuid2))
                 .when()
                 .delete(Constants.NODE_ENDPOINT);
@@ -679,6 +680,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload("delete-graph.json"),
+                        this.uidcid,
                         this.graphUuid))
                 .when()
                 .delete(Constants.GRAPH_ENDPOINT);
