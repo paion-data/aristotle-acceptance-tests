@@ -19,6 +19,8 @@ name: CI/CD
   push:
     branches:
       - master
+  repository_dispatch:
+    types: [ aristotle-changes ]
 
 env:
   USER: Doom9527
@@ -26,11 +28,11 @@ env:
 
 jobs:
   tests:
-    name: Checkstyle
+    name: Acceptance Tests
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - name: Set up JDK
         uses: paion-data/immutable-infrastructure-as-a-service/.github/actions/jdk-setup@master
-      - name: Run maven checkstyle
+      - name: Run acceptance tests
         run: mvn -B clean verify
