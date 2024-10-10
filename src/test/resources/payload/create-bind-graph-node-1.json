@@ -6,13 +6,17 @@
   },
   "graphNodeDTO": [
     {
-      "description": "-",
-      "title": "%s",
+      "properties": {
+        "description": "-",
+        "title": "%s"
+      },
       "temporaryId": "%s"
     },
     {
-      "description": "-",
-      "title": "%s",
+      "properties": {
+        "description": "-",
+        "title": "%s"
+      },
       "temporaryId": "%s"
     }
   ],
