@@ -29,6 +29,8 @@ import io.cucumber.java.en.Given;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,6 +41,8 @@ import java.util.Map;
 /**
  * Steps for CRUD operations on the Doctor data model.
  */
+@Getter
+@Setter
 public class CrudDataModelStep extends AbstractStepDefinitions {
 
     private static boolean isDatabaseCleaningEnabled = true;
@@ -115,8 +119,8 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
     @Given("create a User entity with {string} and {string}")
     public void createUserWithNickNameAndUidcid(final String nickName, final String uidcid) {
         final Response response = createUser(nickName, uidcid);
-        this.uidcid = uidcid;
-        this.nickName = nickName;
+        setUidcid(uidcid);
+        setNickName(nickName);
     }
 
     /**
@@ -129,12 +133,12 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.USER_ENDPOINT + Constants.SLASH + this.uidcid);
+                .get(Constants.USER_ENDPOINT + Constants.SLASH + getUidcid());
         response.then()
                 .statusCode(OK_CODE);
 
-        Assert.assertEquals(this.uidcid, response.jsonPath().get(Constants.USER_UIDCID_PATH));
-        Assert.assertEquals(this.nickName, response.jsonPath().get(Constants.USER_NICK_NAME_PATH));
+        Assert.assertEquals(getUidcid(), response.jsonPath().get(Constants.USER_UIDCID_PATH));
+        Assert.assertEquals(getNickName(), response.jsonPath().get(Constants.USER_NICK_NAME_PATH));
     }
 
     /**
@@ -176,8 +180,8 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .when()
                     .put(Constants.USER_ENDPOINT);
 
-            this.uidcid = inputUidcid;
-            this.nickName = inputNickName;
+            setUidcid(inputUidcid);
+            setNickName(inputNickName);
 
             response.then()
                     .statusCode(OK_CODE);
@@ -196,7 +200,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload(Constants.CREATE_BIND_GRAPH_JSON),
-                        description, title, this.uidcid))
+                        description, title, getUidcid()))
                 .when()
                 .post(Constants.NODE_GRAPH_ENDPOINT);
         response.then()
@@ -215,12 +219,12 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + getUidcid());
         response.then()
                 .statusCode(OK_CODE);
 
         final List<String> graphUuids = response.jsonPath().get(Constants.UUID_PATH);
-        this.graphUuid = graphUuids.get(0);
+        setGraphUuid(graphUuids.get(0));
 
         final List<String> titles = response.jsonPath().get(Constants.TITLE_PATH);
         Assert.assertEquals(title, titles.get(0));
@@ -239,8 +243,8 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
     public void weCreateAUserWithAndAndAddAGraphWithAnd(final String nickName, final String uidcid,
                                                         final String title, final String description) {
         createUser(nickName, uidcid);
-        this.uidcid = uidcid;
-        this.nickName = nickName;
+        setUidcid(uidcid);
+        setNickName(nickName);
 
         createGraph(title, description);
     }
@@ -257,7 +261,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload("update-graph.json"),
-                        this.graphUuid, newTitle, newDescription))
+                        getGraphUuid(), newTitle, newDescription))
                 .when()
                 .put(Constants.GRAPH_ENDPOINT);
         response.then()
@@ -298,7 +302,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + getUidcid());
         response.then()
                 .statusCode(OK_CODE);
 
@@ -326,7 +330,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .body(String.format(payload("create-bind-graph-node.json"),
-                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid,
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), getUidcid(),
                             nodeMap.get("title1"), nodeMap.get("ID1"), nodeMap.get("title2"), nodeMap.get("ID2"),
                             nodeMap.get("title3"), nodeMap.get("ID3"), nodeMap.get("title4"), nodeMap.get("ID4"),
                             relationMap.get("fromId1"), relationMap.get("relation1"), relationMap.get("toId1"),
@@ -352,12 +356,12 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + this.uidcid);
+                .get(Constants.USER_GRAPH_ENDPOINT + Constants.SLASH + getUidcid());
         response.then()
                 .statusCode(OK_CODE);
 
         final List<String> graphUuids = response.jsonPath().get(Constants.UUID_PATH);
-        this.graphUuid = graphUuids.get(0);
+        setGraphUuid(graphUuids.get(0));
     }
 
     /**
@@ -378,7 +382,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .when()
-                    .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+                    .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + getGraphUuid());
             response.then()
                     .statusCode(OK_CODE);
 
@@ -406,7 +410,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .body(String.format(payload(Constants.CREATE_BIND_GRAPH_JSON),
-                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid))
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), getUidcid()))
                     .when()
                     .post(Constants.NODE_GRAPH_ENDPOINT);
             response.then()
@@ -429,7 +433,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .body(String.format(payload("create-bind-node.json"),
-                            this.graphUuid,
+                            getGraphUuid(),
                             nodeMap.get(Constants.TITLE1), nodeMap.get(Constants.ID1),
                             nodeMap.get(Constants.TITLE2), nodeMap.get(Constants.ID2),
                             nodeMap.get(Constants.TITLE3), nodeMap.get(Constants.ID3),
@@ -473,7 +477,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                     .contentType(ContentType.JSON)
                     .accept(ContentType.JSON)
                     .body(String.format(payload("create-bind-graph-node-1.json"),
-                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), this.uidcid,
+                            graphMap.get(Constants.DESCRIPTION), graphMap.get(Constants.TITLE), getUidcid(),
                             nodeMap.get(Constants.TITLE1), nodeMap.get(Constants.ID1), nodeMap.get(Constants.TITLE2),
                             nodeMap.get(Constants.ID2), relationMap.get(Constants.FROM_ID1),
                             relationMap.get(Constants.RELATION_1), relationMap.get(Constants.TO_ID1),
@@ -498,19 +502,19 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + getGraphUuid());
         response.then()
                 .statusCode(OK_CODE);
 
         final List<String> relationUuids = Arrays.asList(response.jsonPath().get("data.nodes[0].relation.uuid"),
                 response.jsonPath().get("data.nodes[1].relation.uuid"));
-        this.relationUuid1 = relationUuids.get(0);
-        this.relationUuid2 = relationUuids.get(1);
+        setRelationUuid1(relationUuids.get(0));
+        setRelationUuid2(relationUuids.get(1));
 
         final List<String> nodeUuids = Arrays.asList(response.jsonPath().get("data.nodes[0].startNode.uuid"),
                 response.jsonPath().get("data.nodes[1].startNode.uuid"));
-        this.nodeUuid1 = nodeUuids.get(0);
-        this.nodeUuid2 = nodeUuids.get(1);
+        setNodeUuid1(nodeUuids.get(0));
+        setNodeUuid2(nodeUuids.get(1));
     }
 
     /**
@@ -524,7 +528,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload("update-relation.json"),
-                        this.graphUuid, this.relationUuid1, newRelationInfo))
+                        getGraphUuid(), getRelationUuid1(), newRelationInfo))
                 .when()
                 .put(Constants.NODE_RELATE_ENDPOINT);
         response.then()
@@ -542,7 +546,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + getGraphUuid());
         response.then()
                 .statusCode(OK_CODE);
 
@@ -561,7 +565,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload("delete-relation.json"),
-                        this.graphUuid, this.relationUuid2))
+                        getGraphUuid(), getRelationUuid2()))
                 .when()
                 .put(Constants.NODE_RELATE_ENDPOINT);
         response.then()
@@ -578,7 +582,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + getGraphUuid());
         response.then()
                 .statusCode(OK_CODE);
 
@@ -598,7 +602,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload("update-delete-relation.json"),
-                        this.graphUuid, this.relationUuid1, newRelationInfo, this.relationUuid2))
+                        getGraphUuid(), getRelationUuid1(), newRelationInfo, getRelationUuid2()))
                 .when()
                 .put(Constants.NODE_RELATE_ENDPOINT);
         response.then()
@@ -617,7 +621,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + getGraphUuid());
         response.then()
                 .statusCode(OK_CODE);
 
@@ -638,8 +642,8 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload("delete-node.json"),
-                        this.graphUuid,
-                        this.nodeUuid1, this.nodeUuid2))
+                        getGraphUuid(),
+                        getNodeUuid1(), getNodeUuid2()))
                 .when()
                 .delete(Constants.NODE_ENDPOINT);
         response.then()
@@ -656,7 +660,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + getGraphUuid());
         response.then()
                 .statusCode(OK_CODE);
 
@@ -680,8 +684,8 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload("delete-graph.json"),
-                        this.uidcid,
-                        this.graphUuid))
+                        getUidcid(),
+                        getGraphUuid()))
                 .when()
                 .delete(Constants.GRAPH_ENDPOINT);
         response.then()
@@ -698,7 +702,7 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .when()
-                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + this.graphUuid);
+                .get(Constants.GRAPH_ENDPOINT + Constants.SLASH + getGraphUuid());
         response.then()
                 .statusCode(OK_CODE);
 

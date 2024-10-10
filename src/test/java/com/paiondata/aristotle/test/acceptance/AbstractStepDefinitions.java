@@ -107,6 +107,4 @@ abstract class AbstractStepDefinitions {
             throw new IllegalArgumentException(message, exception);
         }
     }
-
-
 }
