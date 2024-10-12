@@ -37,9 +37,7 @@ jobs:
         with:
           repository: paion-data/aristotle
           path: aristotle
-#          ref: ${{ github.event.client_payload.ref }}
-          ref: master
-
+          ref: ${{ github.event.client_payload.ref || 'master' }}
 
       # Step 2: Set up JDK for Aristotle
       - name: Set up JDK for Aristotle
