@@ -47,13 +47,13 @@ jobs:
       # Step 3: Build Aristotle project
       - name: Build Aristotle project
         run: |
-          cd Aristotle
+          cd aristotle
           mvn clean package
 
       # Step 4: Build and Deploy Aristotle Docker Containers
       - name: Build and Deploy Aristotle Docker Containers
         run: |
-          cd Aristotle
+          cd aristotle
           docker compose up --build --force-recreate -d
 
       # Step 5: Checkout Aristotle Acceptance Tests Repository
@@ -76,5 +76,5 @@ jobs:
       # Optional: Tear Down Aristotle Docker Containers after tests
       - name: Tear Down Aristotle Docker Containers
         run: |
-          cd Aristotle
+          cd aristotle
           docker compose down
