@@ -1,0 +1,72 @@
+# Copyright 2024 Paion Data
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+---
+name: CI/CD
+
+"on":
+  pull_request:
+  push:
+    branches:
+      - master
+  repository_dispatch:
+    types: [ aristotle-changes ]
+
+env:
+  USER: Doom9527
+  EMAIL: wpan865@gmail.com
+
+jobs:
+  acceptance-tests:
+    name: Acceptance Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Aristotle Repository
+        uses: actions/checkout@v3
+        with:
+          repository: paion-data/aristotle
+          path: aristotle
+          ref: ${{ github.event.client_payload.ref || 'master' }}
+
+      - name: Set up JDK for Aristotle
+        uses: paion-data/immutable-infrastructure-as-a-service/.github/actions/jdk-setup@master
+
+      - name: Build Aristotle project
+        run: |
+          cd aristotle
+          mvn clean package
+
+      - name: Build and Deploy Aristotle Docker Containers
+        run: |
+          cd aristotle
+          docker compose up --build --force-recreate -d
+
+      - name: Checkout Aristotle Acceptance Tests Repository
+        uses: actions/checkout@v3
+        with:
+          repository: paion-data/aristotle-acceptance-tests
+          path: aristotle-acceptance-tests
+          ref: ${{ github.ref }}
+
+      - name: Set up JDK for Acceptance Tests
+        uses: paion-data/immutable-infrastructure-as-a-service/.github/actions/jdk-setup@master
+
+      - name: Run Acceptance Tests
+        run: |
+          cd aristotle-acceptance-tests
+          mvn -B clean verify
+
+      - name: Tear Down Aristotle Docker Containers
+        run: |
+          cd aristotle
+          docker compose down

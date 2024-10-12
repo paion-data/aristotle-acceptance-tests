@@ -113,14 +113,14 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
 
     /**
      * Create a User entity.
-     * @param nickName nickName.
-     * @param uidcid uidcid.
+     * @param inputNickName nickName.
+     * @param inputUidcid uidcid.
      */
     @Given("create a User entity with {string} and {string}")
-    public void createUserWithNickNameAndUidcid(final String nickName, final String uidcid) {
-        final Response response = createUser(nickName, uidcid);
-        setUidcid(uidcid);
-        setNickName(nickName);
+    public void createUserWithNickNameAndUidcid(final String inputNickName, final String inputUidcid) {
+        final Response response = createUser(inputNickName, inputUidcid);
+        setUidcid(inputUidcid);
+        setNickName(inputNickName);
     }
 
     /**
@@ -143,18 +143,18 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
 
     /**
      * creates a User entity.
-     * @param nickName nickName.
-     * @param uidcid uidcid.
+     * @param inputNickName nickName.
+     * @param inputUidcid uidcid.
      *
      * @return Response.
      */
-    protected Response createUser(final String nickName, final String uidcid) {
+    protected Response createUser(final String inputNickName, final String inputUidcid) {
         return RestAssured
                 .given()
                 .contentType(ContentType.JSON)
                 .accept(ContentType.JSON)
                 .body(String.format(payload(Constants.CREATE_UPDATE_USER_JSON),
-                        uidcid, nickName))
+                        inputUidcid, inputNickName))
                 .when()
                 .post(Constants.USER_ENDPOINT);
     }
@@ -234,17 +234,17 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
 
     /**
      * create a User with {string} and {string} and add a graph with {string} and {string}").
-     * @param nickName the nickName
-     * @param uidcid the uidcid
+     * @param inputNickName the nickName
+     * @param inputUidcid the uidcid
      * @param title the title
      * @param description the description
      */
     @Given("we create a User with {string} and {string} and add a graph with {string} and {string}")
-    public void weCreateAUserWithAndAndAddAGraphWithAnd(final String nickName, final String uidcid,
+    public void weCreateAUserWithAndAndAddAGraphWithAnd(final String inputNickName, final String inputUidcid,
                                                         final String title, final String description) {
-        createUser(nickName, uidcid);
-        setUidcid(uidcid);
-        setNickName(nickName);
+        createUser(inputNickName, inputUidcid);
+        setUidcid(inputUidcid);
+        setNickName(inputNickName);
 
         createGraph(title, description);
     }
@@ -394,14 +394,14 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
 
     /**
      * create a User entity with {string} and {string} and add a graph with {string}.
-     * @param nickName the nickname
-     * @param uidcid the uidcid
+     * @param inputNickName the nickname
+     * @param inputUidcid the uidcid
      * @param graphInfo to add
      */
     @Given("create a User entity with {string} and {string} and add a graph with {string}")
-    public void createAUserEntityWithAndAndAddAGraphWith(final String nickName, final String uidcid,
+    public void createAUserEntityWithAndAndAddAGraphWith(final String inputNickName, final String inputUidcid,
                                                          final String graphInfo) {
-        createUserWithNickNameAndUidcid(nickName, uidcid);
+        createUserWithNickNameAndUidcid(inputNickName, inputUidcid);
 
         if (!graphInfo.isEmpty()) {
             final Map<String, String> graphMap = getMap(graphInfo);
@@ -456,17 +456,18 @@ public class CrudDataModelStep extends AbstractStepDefinitions {
 
     /**
      * create a User entity with nickName {string} and uidcid {string}, add a graph with info {string}.
-     * @param nickName the nickname
-     * @param uidcid the uidcid
+     * @param inputNickName the nickname
+     * @param inputUidcid the uidcid
      * @param graphInfo the graph info
      * @param nodeInfo the node info
      * @param relationInfo the relation info
      */
-    @Given("create a User entity with nickName {string} and uidcid {string}, add a graph with info {string}," +
-            " and add nodes with info {string} and bindings with info {string}")
-    public void createUserAddAGraphAddNodesBindings(final String nickName, final String uidcid, final String graphInfo,
-                                                    final String nodeInfo, final String relationInfo) {
-        createUserWithNickNameAndUidcid(nickName, uidcid);
+    @Given("create a User entity with nickName {string} and uidcid {string}, add a graph with info {string}, "
+            + "and add nodes with info {string} and bindings with info {string}")
+    public void createUserAddAGraphAddNodesBindings(final String inputNickName, final String inputUidcid,
+                                                    final String graphInfo, final String nodeInfo,
+                                                    final String relationInfo) {
+        createUserWithNickNameAndUidcid(inputNickName, inputUidcid);
 
         if (!graphInfo.isEmpty() && !nodeInfo.isEmpty() && !relationInfo.isEmpty()) {
             final Map<String, String> graphMap = getMap(graphInfo);
