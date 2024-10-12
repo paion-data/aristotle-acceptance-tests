@@ -71,7 +71,7 @@ jobs:
       - name: Run Acceptance Tests
         run: |
           cd aristotle-acceptance-tests
-          mvn -B clean verify
+          mvn test
 
       # Optional: Tear Down Aristotle Docker Containers after tests
       - name: Tear Down Aristotle Docker Containers
