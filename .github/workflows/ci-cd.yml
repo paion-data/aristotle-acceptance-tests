@@ -19,18 +19,62 @@ name: CI/CD
   push:
     branches:
       - master
+  repository_dispatch:
+    types: [ aristotle-changes ]
 
 env:
   USER: Doom9527
   EMAIL: wpan865@gmail.com
 
 jobs:
-  tests:
-    name: Checkstyle
+  acceptance-tests:
+    name: Acceptance Tests
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up JDK
+      # Step 1: Checkout Aristotle Repository
+      - name: Checkout Aristotle Repository
+        uses: actions/checkout@v3
+        with:
+          repository: paion-data/aristotle
+#          ref: ${{ github.event.client_payload.ref }}
+          ref: master
+
+
+      # Step 2: Set up JDK for Aristotle
+      - name: Set up JDK for Aristotle
         uses: paion-data/immutable-infrastructure-as-a-service/.github/actions/jdk-setup@master
-      - name: Run maven checkstyle
-        run: mvn -B clean verify
+
+      # Step 3: Build Aristotle project
+      - name: Build Aristotle project
+        run: |
+          cd Aristotle
+          mvn clean package
+
+      # Step 4: Build and Deploy Aristotle Docker Containers
+      - name: Build and Deploy Aristotle Docker Containers
+        run: |
+          cd Aristotle
+          docker compose up --build --force-recreate -d
+
+      # Step 5: Checkout Aristotle Acceptance Tests Repository
+      - name: Checkout Aristotle Acceptance Tests Repository
+        uses: actions/checkout@v3
+        with:
+          repository: paion-data/aristotle-acceptance-tests
+          ref: master
+
+      # Step 6: Set up JDK for Acceptance Tests
+      - name: Set up JDK for Acceptance Tests
+        uses: paion-data/immutable-infrastructure-as-a-service/.github/actions/jdk-setup@master
+
+      # Step 7: Run Acceptance Tests
+      - name: Run Acceptance Tests
+        run: |
+          cd aristotle-acceptance-tests
+          mvn -B clean verify
+
+      # Optional: Tear Down Aristotle Docker Containers after tests
+      - name: Tear Down Aristotle Docker Containers
+        run: |
+          cd Aristotle
+          docker compose down
